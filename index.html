@@ -20,8 +20,6 @@
         
         .token {
             position: absolute;
-            width: 32px;
-            height: 32px;
             transform-origin: center center;
             will-change: transform;
         }
@@ -41,6 +39,12 @@
             constructor(container) {
                 this.element = document.createElement('div');
                 this.element.className = 'token';
+                
+                // Randomly assign size multiplier
+                this.sizeMultiplier = [0.7, 1, 1.5][Math.floor(Math.random() * 3)];
+                const size = 32 * this.sizeMultiplier;
+                this.element.style.width = `${size}px`;
+                this.element.style.height = `${size}px`;
                 
                 this.img = document.createElement('img');
                 this.img.src = 'token.png'; // Will use local image file
@@ -105,9 +109,10 @@
                     this.reset();
                 }
                 
-                if (this.x < 0 || this.x > container.clientWidth - 32) {
+                // Update position and adjust for size
+                if (this.x < 0 || this.x > container.clientWidth - (32 * this.sizeMultiplier)) {
                     this.velocityX *= -0.8;
-                    this.x = Math.max(0, Math.min(this.x, container.clientWidth - 32));
+                    this.x = Math.max(0, Math.min(this.x, container.clientWidth - (32 * this.sizeMultiplier)));
                 }
                 
                 // Update element
