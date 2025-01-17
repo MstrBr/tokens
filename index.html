@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Animation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #ff69b4, #ff1493, #ff4500);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .token {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            transform-origin: center center;
+            will-change: transform;
+        }
+        
+        .token img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+
+    <script>
+        class Token {
+            constructor(container) {
+                this.element = document.createElement('div');
+                this.element.className = 'token';
+                
+                this.img = document.createElement('img');
+                this.img.src = 'token.png'; // Will use local image file
+                this.img.alt = 'Token';
+                
+                this.element.appendChild(this.img);
+                container.appendChild(this.element);
+                
+                this.reset();
+                this.velocityX = (Math.random() - 0.5) * 100;
+                this.velocityY = 0;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = (Math.random() - 0.5) * 360;
+                this.attractionStrength = 0.8 + Math.random() * 0.4;
+            }
+            
+            reset() {
+                const containerWidth = container.clientWidth;
+                this.x = Math.random() * (containerWidth - 32);
+                this.y = -50 - Math.random() * 500;
+                this.velocityX = (Math.random() - 0.5) * 100;
+                this.velocityY = 0;
+            }
+            
+            update(deltaTime, mouseX, mouseY) {
+                const deltaSeconds = deltaTime / 1000;
+                
+                // Mouse attraction
+                const dx = mouseX - this.x;
+                const dy = mouseY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 300) {
+                    const attraction = (300 - distance) / 300 * this.attractionStrength;
+                    const attractionForce = 4000 * attraction;
+                    const angle = Math.atan2(dy, dx);
+                    
+                    this.velocityX += Math.cos(angle) * attractionForce * deltaSeconds;
+                    this.velocityY += Math.sin(angle) * attractionForce * deltaSeconds;
+                }
+                
+                // Apply gravity
+                this.velocityY += 784 * deltaSeconds;
+                
+                // Apply terminal velocity
+                const speed = Math.sqrt(this.velocityX * this.velocityX + this.velocityY * this.velocityY);
+                if (speed > 800) {
+                    const scale = 800 / speed;
+                    this.velocityX *= scale;
+                    this.velocityY *= scale;
+                }
+                
+                // Update position
+                this.x += this.velocityX * deltaSeconds;
+                this.y += this.velocityY * deltaSeconds;
+                
+                // Update rotation
+                this.rotation += this.rotationSpeed * deltaSeconds;
+                
+                // Check boundaries
+                if (this.y > container.clientHeight + 50) {
+                    this.reset();
+                }
+                
+                if (this.x < 0 || this.x > container.clientWidth - 32) {
+                    this.velocityX *= -0.8;
+                    this.x = Math.max(0, Math.min(this.x, container.clientWidth - 32));
+                }
+                
+                // Update element
+                this.element.style.transform = `translate3d(${this.x}px, ${this.y}px, 0) rotate(${this.rotation}deg)`;
+            }
+        }
+
+        const container = document.getElementById('container');
+        const tokens = [];
+        let mouseX = 0;
+        let mouseY = 0;
+        let lastTime = performance.now();
+
+        // Create tokens
+        const tokenCount = Math.floor((window.innerWidth * window.innerHeight) / 8000);
+        for (let i = 0; i < tokenCount; i++) {
+            tokens.push(new Token(container));
+        }
+
+        // Mouse tracking
+        container.addEventListener('mousemove', (e) => {
+            const rect = container.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+
+        // Animation loop
+        function animate(timestamp) {
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+            
+            tokens.forEach(token => token.update(deltaTime, mouseX, mouseY));
+            requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            const newTokenCount = Math.floor((window.innerWidth * window.innerHeight) / 8000);
+            
+            if (newTokenCount > tokens.length) {
+                for (let i = tokens.length; i < newTokenCount; i++) {
+                    tokens.push(new Token(container));
+                }
+            } else {
+                while (tokens.length > newTokenCount) {
+                    const token = tokens.pop();
+                    token.element.remove();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
