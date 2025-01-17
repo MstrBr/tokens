@@ -27,14 +27,24 @@
             left: 50%;
             transform: translate(-50%, -50%);
             font-family: 'Unbounded', sans-serif;
-            font-size: 4rem;
+            font-size: min(4rem, 15vw);
             font-weight: 700;
-            color: rgba(255, 255, 255, 0.1);
-            white-space: nowrap;
+            color: rgba(255, 255, 255, 0.25);
+            white-space: normal;
             pointer-events: none;
             z-index: 0;
             text-align: center;
             user-select: none;
+            padding: 0 20px;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        @media (max-width: 768px) {
+            .background-text {
+                font-size: 12vw;
+                line-height: 1.2;
+            }
         }
         
         .token {
