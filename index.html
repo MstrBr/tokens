@@ -82,13 +82,13 @@
                     this.velocityY += Math.sin(angle) * attractionForce * deltaSeconds;
                 }
                 
-                // Apply gravity
-                this.velocityY += 784 * deltaSeconds;
+                // Apply gravity (15% slower)
+                this.velocityY += 666 * deltaSeconds;
                 
-                // Apply terminal velocity
+                // Apply terminal velocity (15% slower)
                 const speed = Math.sqrt(this.velocityX * this.velocityX + this.velocityY * this.velocityY);
-                if (speed > 800) {
-                    const scale = 800 / speed;
+                if (speed > 680) {
+                    const scale = 680 / speed;
                     this.velocityX *= scale;
                     this.velocityY *= scale;
                 }
