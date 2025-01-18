@@ -12,7 +12,7 @@
             margin: 0;
             overflow: hidden;
         }
-
+        
         #container {
             width: 100vw;
             height: 100vh;
@@ -20,16 +20,14 @@
             overflow: hidden;
             position: relative;
         }
-
+        
         .background-text {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             font-family: 'Unbounded', sans-serif;
-            font-size: min(4rem, 15vw);
             font-weight: 700;
-            color: rgba(255, 255, 255, 0.45); /* Increased opacity */
             color: rgba(255, 255, 255, 0.45);
             white-space: normal;
             pointer-events: none;
@@ -37,9 +35,6 @@
             text-align: center;
             user-select: none;
             padding: 0 20px;
-            width: calc(100% - 80px); /* Added side spacing */
-            max-width: calc(100vw - 80px); /* Added side spacing */
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Added subtle shadow */
             width: calc(100% - 80px);
             max-width: calc(100vw - 80px);
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
@@ -49,30 +44,26 @@
 
         @media (max-width: 768px) {
             .background-text {
-                font-size: 12vw;
-                line-height: 1.2;
-                width: calc(100% - 40px); /* Smaller side spacing on mobile */
                 font-size: clamp(1.5rem, min(10vw, 10vh), 4rem);
                 width: calc(100% - 40px);
                 max-width: calc(100vw - 40px);
             }
         }
-
+        
         .token {
             position: absolute;
-            width: 32px;
-            height: 32px;
             width: 40px;
             height: 40px;
             transform-origin: center center;
             will-change: transform;
         }
-
+        
         .token img {
             width: 100%;
             height: 100%;
             object-fit: contain;
         }
+
         @media (max-width: 480px) {
             .token {
                 width: 36px;
@@ -91,14 +82,14 @@
             constructor(container) {
                 this.element = document.createElement('div');
                 this.element.className = 'token';
-
+                
                 this.img = document.createElement('img');
                 this.img.src = 'token.png';
                 this.img.alt = 'Token';
-
+                
                 this.element.appendChild(this.img);
                 container.appendChild(this.element);
-
+                
                 this.reset();
                 this.velocityX = (Math.random() - 0.5) * 100;
                 this.velocityY = 0;
@@ -106,12 +97,9 @@
                 this.rotationSpeed = (Math.random() - 0.5) * 360;
                 this.attractionStrength = 0.8 + Math.random() * 0.4;
             }
-
+            
             reset() {
                 const containerWidth = container.clientWidth;
-                const margin = 40; // Keep tokens away from edges
-                this.x = margin + Math.random() * (containerWidth - 32 - (margin * 2));
-                this.y = -50; // Start only from top
                 const margin = 40;
                 const tokenSize = window.innerWidth <= 480 ? 36 : 40;
                 this.x = margin + Math.random() * (containerWidth - tokenSize - (margin * 2));
@@ -119,31 +107,30 @@
                 this.velocityX = (Math.random() - 0.5) * 100;
                 this.velocityY = 0;
             }
-
+            
             update(deltaTime, mouseX, mouseY) {
                 const deltaSeconds = deltaTime / 1000;
-
+                
                 // Mouse attraction (only in 20% of screen area)
                 const screenArea = container.clientWidth * container.clientHeight;
-                const attractionRadius = Math.sqrt(screenArea * 0.2); // ~20% of screen area
                 const attractionRadius = Math.sqrt(screenArea * 0.2);
-
+                
                 const dx = mouseX - this.x;
                 const dy = mouseY - this.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
-
+                
                 if (distance < attractionRadius) {
                     const attraction = (attractionRadius - distance) / attractionRadius * this.attractionStrength;
                     const attractionForce = 4000 * attraction;
                     const angle = Math.atan2(dy, dx);
-
+                    
                     this.velocityX += Math.cos(angle) * attractionForce * deltaSeconds;
                     this.velocityY += Math.sin(angle) * attractionForce * deltaSeconds;
                 }
-
+                
                 // Apply gravity (15% slower)
                 this.velocityY += 666 * deltaSeconds;
-
+                
                 // Apply terminal velocity (15% slower)
                 const speed = Math.sqrt(this.velocityX * this.velocityX + this.velocityY * this.velocityY);
                 if (speed > 680) {
@@ -151,29 +138,26 @@
                     this.velocityX *= scale;
                     this.velocityY *= scale;
                 }
-
+                
                 // Update position
                 this.x += this.velocityX * deltaSeconds;
                 this.y += this.velocityY * deltaSeconds;
-
+                
                 // Update rotation
                 this.rotation += this.rotationSpeed * deltaSeconds;
-
+                
                 // Check boundaries
-                const margin = 40; // Keep tokens away from edges
                 const margin = 40;
                 const tokenSize = window.innerWidth <= 480 ? 36 : 40;
                 if (this.y > container.clientHeight + 50) {
                     this.reset();
                 }
-
-                if (this.x < margin || this.x > container.clientWidth - 32 - margin) {
+                
                 if (this.x < margin || this.x > container.clientWidth - tokenSize - margin) {
                     this.velocityX *= -0.8;
-                    this.x = Math.max(margin, Math.min(this.x, container.clientWidth - 32 - margin));
                     this.x = Math.max(margin, Math.min(this.x, container.clientWidth - tokenSize - margin));
                 }
-
+                
                 // Update element
                 this.element.style.transform = `translate3d(${this.x}px, ${this.y}px, 0) rotate(${this.rotation}deg)`;
             }
@@ -202,7 +186,7 @@
         function animate(timestamp) {
             const deltaTime = timestamp - lastTime;
             lastTime = timestamp;
-
+            
             tokens.forEach(token => token.update(deltaTime, mouseX, mouseY));
             requestAnimationFrame(animate);
         }
@@ -212,7 +196,7 @@
         // Handle resize
         window.addEventListener('resize', () => {
             const newTokenCount = Math.floor((window.innerWidth * window.innerHeight) / 8000);
-
+            
             if (newTokenCount > tokens.length) {
                 for (let i = tokens.length; i < newTokenCount; i++) {
                     tokens.push(new Token(container));
