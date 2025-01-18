@@ -23,10 +23,17 @@
         
         @keyframes exciting-wiggle {
             0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
-            25% { transform: translate(-50%, -50%) rotate(-1deg) scale(1.02); }
-            50% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
-            75% { transform: translate(-50%, -50%) rotate(1deg) scale(1.02); }
+            20% { transform: translate(-50%, -50%) rotate(-2deg) scale(1.05); }
+            40% { transform: translate(-50%, -50%) rotate(2deg) scale(1.05); }
+            60% { transform: translate(-50%, -50%) rotate(-2deg) scale(1.02); }
+            80% { transform: translate(-50%, -50%) rotate(2deg) scale(1.02); }
             100% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+        }
+
+        @keyframes text-click {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
 
         .background-text {
@@ -37,8 +44,9 @@
             font-weight: 800;
             color: rgba(255, 255, 255, 0.85);
             white-space: normal;
-            pointer-events: none;
-            z-index: 0;
+            pointer-events: auto;
+            cursor: pointer;
+            z-index: 1;
             text-align: center;
             user-select: none;
             padding: 0 20px;
@@ -49,8 +57,14 @@
                 0 0 20px rgba(255, 255, 255, 0.2);
             font-size: clamp(2rem, min(8vw, 8vh), 6rem);
             line-height: 1.2;
-            animation: exciting-wiggle 3s ease-in-out infinite;
+            animation: exciting-wiggle 2s ease-in-out infinite;
             filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+        }
+
+        .confetti {
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
         }
 
         @media (max-width: 768px) {
@@ -174,6 +188,68 @@
             }
         }
 
+        class Particle {
+            constructor(x, y, color) {
+                this.element = document.createElement('div');
+                this.element.className = 'confetti';
+                this.element.style.width = '8px';
+                this.element.style.height = '8px';
+                this.element.style.backgroundColor = color;
+                this.element.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                
+                this.x = x;
+                this.y = y;
+                this.velocityX = (Math.random() - 0.5) * 15;
+                this.velocityY = -Math.random() * 15 - 5;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = (Math.random() - 0.5) * 720;
+                
+                container.appendChild(this.element);
+            }
+
+            update(deltaTime) {
+                const deltaSeconds = deltaTime / 1000;
+                
+                this.velocityY += 25 * deltaSeconds; // Gravity
+                this.x += this.velocityX;
+                this.y += this.velocityY;
+                this.rotation += this.rotationSpeed * deltaSeconds;
+                
+                this.element.style.transform = 
+                    `translate(${this.x}px, ${this.y}px) rotate(${this.rotation}deg)`;
+                
+                return this.y < container.clientHeight + 10;
+            }
+        }
+
+        function createFireworks(x, y) {
+            const colors = ['#FFD700', '#FF69B4', '#FF1493', '#ff4500', '#ffffff'];
+            const particles = [];
+            
+            for (let i = 0; i < 50; i++) {
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                const particle = new Particle(x, y, color);
+                particles.push(particle);
+            }
+
+            let lastTime = performance.now();
+            
+            function animateParticles(timestamp) {
+                const deltaTime = timestamp - lastTime;
+                lastTime = timestamp;
+                
+                const remaining = particles.filter(particle => particle.update(deltaTime));
+                
+                if (remaining.length > 0) {
+                    requestAnimationFrame(animateParticles);
+                } else {
+                    particles.forEach(particle => particle.element.remove());
+                }
+            }
+            
+            requestAnimationFrame(animateParticles);
+        }
+
         const container = document.getElementById('container');
         const tokens = [];
         let mouseX = 0;
@@ -191,6 +267,21 @@
             const rect = container.getBoundingClientRect();
             mouseX = e.clientX - rect.left;
             mouseY = e.clientY - rect.top;
+        });
+
+        // Add click handler for text
+        const text = document.querySelector('.background-text');
+        text.addEventListener('click', (e) => {
+            const rect = text.getBoundingClientRect();
+            const x = e.clientX;
+            const y = e.clientY;
+            
+            text.style.animation = 'text-click 0.5s ease-out';
+            setTimeout(() => {
+                text.style.animation = 'exciting-wiggle 2s ease-in-out infinite';
+            }, 500);
+            
+            createFireworks(x, y);
         });
 
         // Animation loop
