@@ -1,80 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Previous head content remains the same until the style section -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Animation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* ... previous styles remain the same until .background-text ... */
-        
-        @keyframes textFloat {
-            0%, 100% {
-                transform: translate(-50%, -50%) rotate(-1deg);
-            }
-            50% {
-                transform: translate(-50%, -50%) rotate(1deg);
-            }
+        body {
+            margin: 0;
+            overflow: hidden;
         }
-        
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #ff69b4, #ff1493, #ff4500);
+            overflow: hidden;
+            position: relative;
+        }
+
         .background-text {
             position: absolute;
             top: 50%;
             left: 50%;
+            transform: translate(-50%, -50%);
             font-family: 'Unbounded', sans-serif;
-            font-weight: 800; /* Increased from 700 */
-            color: rgba(255, 255, 255, 0.85); /* Much more visible */
+            font-size: min(4rem, 15vw);
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.45); /* Increased opacity */
+            color: rgba(255, 255, 255, 0.45);
             white-space: normal;
             pointer-events: none;
             z-index: 0;
             text-align: center;
             user-select: none;
             padding: 0 20px;
+            width: calc(100% - 80px); /* Added side spacing */
+            max-width: calc(100vw - 80px); /* Added side spacing */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); /* Added subtle shadow */
             width: calc(100% - 80px);
             max-width: calc(100vw - 80px);
-            text-shadow: 
-                2px 2px 4px rgba(0, 0, 0, 0.3),
-                -1px -1px 0 rgba(0, 0, 0, 0.2),
-                1px -1px 0 rgba(0, 0, 0, 0.2),
-                -1px 1px 0 rgba(0, 0, 0, 0.2),
-                1px 1px 0 rgba(0, 0, 0, 0.2); /* Enhanced shadow for better contrast */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
             font-size: clamp(2rem, min(8vw, 8vh), 6rem);
             line-height: 1.2;
-            animation: textFloat 5s ease-in-out infinite;
-            transform-origin: center center;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .number {
-            font-size: 1.2em; /* Larger than the rest */
-            background: linear-gradient(45deg, #fff, #ffd700);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-        }
-
-        .unit {
-            font-weight: 700;
-            color: #ffd700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
         }
 
         @media (max-width: 768px) {
             .background-text {
+                font-size: 12vw;
+                line-height: 1.2;
+                width: calc(100% - 40px); /* Smaller side spacing on mobile */
                 font-size: clamp(1.5rem, min(10vw, 10vh), 4rem);
                 width: calc(100% - 40px);
                 max-width: calc(100vw - 40px);
             }
         }
 
-        /* ... rest of the styles remain the same ... */
+        .token {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            width: 40px;
+            height: 40px;
+            transform-origin: center center;
+            will-change: transform;
+        }
+
+        .token img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        @media (max-width: 480px) {
+            .token {
+                width: 36px;
+                height: 36px;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="container">
-        <div class="background-text">
-            <span class="number">30,000,000</span>
-            <span class="unit">XW3</span>
-        </div>
+        <div class="background-text">30,000,000 XW3</div>
     </div>
 
-    <!-- ... rest of the code remains the same ... -->
+    <script>
+        class Token {
+            constructor(container) {
+                this.element = document.createElement('div');
+                this.element.className = 'token';
+
+                this.img = document.createElement('img');
+                this.img.src = 'token.png';
+                this.img.alt = 'Token';
+
+                this.element.appendChild(this.img);
+                container.appendChild(this.element);
+
+                this.reset();
+                this.velocityX = (Math.random() - 0.5) * 100;
+                this.velocityY = 0;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = (Math.random() - 0.5) * 360;
+                this.attractionStrength = 0.8 + Math.random() * 0.4;
+            }
+
+            reset() {
+                const containerWidth = container.clientWidth;
+                const margin = 40; // Keep tokens away from edges
+                this.x = margin + Math.random() * (containerWidth - 32 - (margin * 2));
+                this.y = -50; // Start only from top
+                const margin = 40;
+                const tokenSize = window.innerWidth <= 480 ? 36 : 40;
+                this.x = margin + Math.random() * (containerWidth - tokenSize - (margin * 2));
+                this.y = -50;
+                this.velocityX = (Math.random() - 0.5) * 100;
+                this.velocityY = 0;
+            }
+
+            update(deltaTime, mouseX, mouseY) {
+                const deltaSeconds = deltaTime / 1000;
+
+                // Mouse attraction (only in 20% of screen area)
+                const screenArea = container.clientWidth * container.clientHeight;
+                const attractionRadius = Math.sqrt(screenArea * 0.2); // ~20% of screen area
+                const attractionRadius = Math.sqrt(screenArea * 0.2);
+
+                const dx = mouseX - this.x;
+                const dy = mouseY - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < attractionRadius) {
+                    const attraction = (attractionRadius - distance) / attractionRadius * this.attractionStrength;
+                    const attractionForce = 4000 * attraction;
+                    const angle = Math.atan2(dy, dx);
+
+                    this.velocityX += Math.cos(angle) * attractionForce * deltaSeconds;
+                    this.velocityY += Math.sin(angle) * attractionForce * deltaSeconds;
+                }
+
+                // Apply gravity (15% slower)
+                this.velocityY += 666 * deltaSeconds;
+
+                // Apply terminal velocity (15% slower)
+                const speed = Math.sqrt(this.velocityX * this.velocityX + this.velocityY * this.velocityY);
+                if (speed > 680) {
+                    const scale = 680 / speed;
+                    this.velocityX *= scale;
+                    this.velocityY *= scale;
+                }
+
+                // Update position
+                this.x += this.velocityX * deltaSeconds;
+                this.y += this.velocityY * deltaSeconds;
+
+                // Update rotation
+                this.rotation += this.rotationSpeed * deltaSeconds;
+
+                // Check boundaries
+                const margin = 40; // Keep tokens away from edges
+                const margin = 40;
+                const tokenSize = window.innerWidth <= 480 ? 36 : 40;
+                if (this.y > container.clientHeight + 50) {
+                    this.reset();
+                }
+
+                if (this.x < margin || this.x > container.clientWidth - 32 - margin) {
+                if (this.x < margin || this.x > container.clientWidth - tokenSize - margin) {
+                    this.velocityX *= -0.8;
+                    this.x = Math.max(margin, Math.min(this.x, container.clientWidth - 32 - margin));
+                    this.x = Math.max(margin, Math.min(this.x, container.clientWidth - tokenSize - margin));
+                }
+
+                // Update element
+                this.element.style.transform = `translate3d(${this.x}px, ${this.y}px, 0) rotate(${this.rotation}deg)`;
+            }
+        }
+
+        const container = document.getElementById('container');
+        const tokens = [];
+        let mouseX = 0;
+        let mouseY = 0;
+        let lastTime = performance.now();
+
+        // Create tokens
+        const tokenCount = Math.floor((window.innerWidth * window.innerHeight) / 8000);
+        for (let i = 0; i < tokenCount; i++) {
+            tokens.push(new Token(container));
+        }
+
+        // Mouse tracking
+        container.addEventListener('mousemove', (e) => {
+            const rect = container.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
+        });
+
+        // Animation loop
+        function animate(timestamp) {
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            tokens.forEach(token => token.update(deltaTime, mouseX, mouseY));
+            requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+
+        // Handle resize
+        window.addEventListener('resize', () => {
+            const newTokenCount = Math.floor((window.innerWidth * window.innerHeight) / 8000);
+
+            if (newTokenCount > tokens.length) {
+                for (let i = tokens.length; i < newTokenCount; i++) {
+                    tokens.push(new Token(container));
+                }
+            } else {
+                while (tokens.length > newTokenCount) {
+                    const token = tokens.pop();
+                    token.element.remove();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
